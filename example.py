@@ -14,7 +14,7 @@ res = cleaner.run("food.zip","Food Mod","food","This is the food mod","")
 # return path to new archive
 
 # The same, but gets from github instead of location
-res = mm.githubGet("https://github.com/rubenwardy/awards","Achievements","awards","This is the award mod","")
+res = cleaner.githubGet("https://github.com/rubenwardy/awards","Achievements","awards","This is the award mod","")
 
 # Get messages in HTML format
 cleaner.reportHTML()
