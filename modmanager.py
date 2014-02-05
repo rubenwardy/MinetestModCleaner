@@ -168,12 +168,38 @@ class ModManager:
         import glob
         files = glob.glob(dir+'/*.lua')
         for f in files:
-            if 'os.execute' in open(f).read():
-                self._msg("Security Risk","os.execute found in "+f,WARNING)  
-                return "os.execute found in "+f
-            if 'os.io' in open(f).read():
-                self._msg("Security Risk","os.io found in "+f,WARNING)
-                return "os.io found in "+f
+            rd = open(f).read()
+            #if 'os.execute' in rd:
+            #    self._msg("Security Risk","os.execute found in "+f,WARNING)  
+            #    return "os.execute found in "+f
+            #if 'os.io' in rd:
+            #    self._msg("Security Risk","os.io found in "+f,WARNING)
+            #    return "os.io found in "+f
+            def lookfor(sub,reg):
+                if sub in rd:
+                    import re
+                    oses = [m.start() for m in re.finditer(reg, rd)]
+                    for o in oses:
+                        start = o - 10
+                        tend = o + 50
+                        
+                        if start < 0:
+                            start = 0
+                        if tend > len(rd):
+                           tend = len(rd)
+                           
+                        b4 = o-1
+                        charb4 = -1
+                        
+                        if (b4>=0):
+                            charb4 = rd[b4]
+                        
+                        if charb4 == "" or charb4=="\n" or charb4 == "\0" or charb4==-1 or charb4=="\t" or charb4==";":
+                            self._msg("Possible security risk, needs checking",sub+" used near '"+rd[start:tend].replace("\n"," ")+"'")
+            
+            lookfor("os.","os\.")
+            lookfor("_g","_g")
+            lookfor("loadstring","loadstring")
                 
         sdirs = [x[0] for x in os.walk(dir)]
         sdirs = sdirs[1:]
