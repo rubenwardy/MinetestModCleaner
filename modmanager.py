@@ -15,7 +15,13 @@ IS_MODPACK = 2
 NOTICE = 0
 WARNING = 1
 
-    
+class CheckResult:
+    file = ""
+    safe = 0
+    def __init__(self,newzip,safe):
+        self.file = newzip
+        self.safe = safe
+
 class ModManager:
     errormsg = 0
     error = 0
@@ -122,11 +128,13 @@ class ModManager:
         if image!="" and os.path.isfile(image) and not os.path.isfile(self.wd+"/"+name+"/screenshot.png"):
             shutil.copy2(image, self.wd+"/"+name+"/screenshot.png")
             
+        safe = self.searchLua(self.wd+"/"+name)
+            
         file = self.wd+"/"+name+"_"+str(int(math.floor(random.random()*1000)))+".zip"
         self.zipdir(self.wd+"/"+name,file)
         shutil.rmtree(self.wd+"/"+name)
-        return file
-    
+        return CheckResult(file,safe)
+        
     # See what type of file it is
     def folderType(self,path):
         print("Getting folder type of "+path)
@@ -155,3 +163,24 @@ class ModManager:
         localFile.close()
         
         return self.run(self.wd+"/github.zip",title,name,desc,image)
+        
+    def searchLua(self,dir):
+        import glob
+        files = glob.glob(dir+'/*.lua')
+        for f in files:
+            if 'os.execute' in open(f).read():
+                self._msg("Security Risk","os.execute found in "+f,WARNING)  
+                return "os.execute found in "+f
+            if 'os.io' in open(f).read():
+                self._msg("Security Risk","os.io found in "+f,WARNING)
+                return "os.io found in "+f
+                
+        sdirs = [x[0] for x in os.walk(dir)]
+        sdirs = sdirs[1:]
+        
+        for d in sdirs:
+            res = self.searchLua(d)
+            if res!=0:
+                return res
+            
+        return 0
