@@ -142,18 +142,3 @@ class ModManager:
         localFile.close()
         
         return self.run(self.wd+"/github.zip",title,name,desc,image)
-
-# Create class
-mm = ModManager("working")
-
-# Process already downloaded zip
-#res = mm.run("food.zip","Food Mod","food","This is the food mod","")
-
-# Download from github and process
-dwl = mm.githubGet("https://github.com/rubenwardy/awards","Achievements","awards","This is the award mod","")
-
-# Get messages in HTML format
-#mm.reportHTML()
-
-# Clear messages
-#mm.clear()
