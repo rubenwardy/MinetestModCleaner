@@ -1,4 +1,7 @@
-import zipfile,os.path,os,shutil
+from __future__ import with_statement
+import zipfile,os.path,os,shutil,random,math
+from contextlib import closing
+from zipfile import ZipFile, ZIP_DEFLATED
 
 def my_move(src,dst):
     listOfFiles = os.listdir(src)
@@ -22,9 +25,8 @@ class ModManager:
         self.clear()
         self.wd = workingdir
         
-    def clear():
+    def clear(self):
         self.report = []
-        
     
     def get_immediate_subdirectories(self,dir):
         return [name for name in os.listdir(dir)
@@ -32,6 +34,16 @@ class ModManager:
     def unzip(self,source_filename, dest_dir):
         zip = zipfile.ZipFile(source_filename)
         zip.extractall(dest_dir)
+        
+    def zipdir(self,basedir, archivename):
+        assert os.path.isdir(basedir)
+        with closing(ZipFile(archivename, "w", ZIP_DEFLATED)) as z:
+            for root, dirs, files in os.walk(basedir):
+                #NOTE: ignore empty directories
+                for fn in files:
+                    absfn = os.path.join(root, fn)
+                    zfn = absfn[len(basedir)+len(os.sep):] #XXX: relative path
+                    z.write(absfn, zfn)
         
     def _msg(self,title,msg,level=0):
         tmp = ""
@@ -61,16 +73,14 @@ class ModManager:
     # Processes the uploaded zip file
     def run(self,location,title,name,desc,image):
         self._msg("Processing zipped mod",location)
-        valid_files = ["lua","md","txt","png","jpeg"]
-        banned_files = ["exe","sh","bat"]
-        
         if not os.path.isfile(location):
             print("Unable to find zip");
             return False
         if not os.path.exists(self.wd):
             os.makedirs(self.wd)
-        if not os.path.exists(self.wd+"/"+name):
-            os.makedirs(self.wd+"/"+name)
+        if os.path.exists(self.wd+"/"+name):
+            shutil.rmtree(self.wd+"/"+name)
+        os.makedirs(self.wd+"/"+name)
             
         self._msg("Unzipping file","unzipping the mod to "+self.wd+"/"+name)  
         self.unzip(location,self.wd+"/"+name)
@@ -111,8 +121,11 @@ class ModManager:
             
         if image!="" and os.path.isfile(image) and not os.path.isfile(self.wd+"/"+name+"/screenshot.png"):
             shutil.copy2(image, self.wd+"/"+name+"/screenshot.png")
-        
-        return True
+            
+        file = self.wd+"/"+name+"_"+str(int(math.floor(random.random()*1000)))+".zip"
+        self.zipdir(self.wd+"/"+name,file)
+        shutil.rmtree(self.wd+"/"+name)
+        return file
     
     # See what type of file it is
     def folderType(self,path):
