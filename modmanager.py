@@ -198,7 +198,7 @@ class ModManager:
                             self._msg("Possible security risk, needs checking",sub+" used near '"+rd[start:tend].replace("\n"," ")+"'")
             
             lookfor("os.","os\.")
-            lookfor("_g","_g")
+            lookfor("_G","_G")
             lookfor("loadstring","loadstring")
                 
         sdirs = [x[0] for x in os.walk(dir)]
